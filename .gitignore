@@ -10,7 +10,7 @@ __pycache__/
 build/
 dist/
 *.egg-info/
-.eggs/
+.eggs/z
 pip-wheel-metadata/
 
 # Virtual environments
