@@ -9,3 +9,5 @@ python-pptx
 openpyxl
 pandas
 tiktoken
+openai
+python-multipart
