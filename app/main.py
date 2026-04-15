@@ -5,6 +5,7 @@ from app.llm import generate_answer
 from app.utils.parsers import *
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from app.llm import generate_answer  # already exists
 
 class AskRequest(BaseModel):
     query: str
@@ -24,9 +25,28 @@ app.add_middleware(
 )
 
 
+def summarize_text(text: str):
+    from openai import OpenAI
+    from app.config import OPENAI_API_KEY
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    prompt = f"""
+Summarize the following document in 3-4 short bullet points:
+
+{text[:4000]}
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return response.choices[0].message.content
+
+
 @app.post("/upload")
 async def upload(file: UploadFile = File(...)):
-
     content = await file.read()
 
     if file.filename.endswith(".pdf"):
@@ -42,7 +62,13 @@ async def upload(file: UploadFile = File(...)):
 
     doc_id = index_document(text)
 
-    return {"document_id": doc_id}
+    # ✅ generate summary
+    summary = summarize_text(text)
+
+    return {
+        "document_id": doc_id,
+        "summary": summary
+    }
 
 
 @app.post("/ask")
