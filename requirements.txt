@@ -11,3 +11,4 @@ pandas
 tiktoken
 openai
 python-multipart
+pymongo

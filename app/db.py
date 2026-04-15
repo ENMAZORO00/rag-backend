@@ -6,7 +6,12 @@ from pymilvus import (
     Collection,
     utility
 )
-from app.config import MILVUS_URI, MILVUS_TOKEN, EMBEDDING_DIM
+from app.config import (
+    MILVUS_URI,
+    MILVUS_TOKEN,
+    EMBEDDING_DIM,
+    MILVUS_COLLECTION_NAME
+)
 
 # Connect once at startup
 connections.connect(
@@ -15,7 +20,7 @@ connections.connect(
     token=MILVUS_TOKEN
 )
 
-COLLECTION_NAME = "rag_collection"
+COLLECTION_NAME = MILVUS_COLLECTION_NAME
 
 
 def get_collection():
@@ -48,6 +53,34 @@ def get_collection():
                 name="document_id",
                 dtype=DataType.VARCHAR,
                 max_length=200
+            ),
+            FieldSchema(
+                name="source_type",
+                dtype=DataType.VARCHAR,
+                max_length=50
+            ),
+            FieldSchema(
+                name="media_id",
+                dtype=DataType.VARCHAR,
+                max_length=200
+            ),
+            FieldSchema(
+                name="segment_id",
+                dtype=DataType.VARCHAR,
+                max_length=200
+            ),
+            FieldSchema(
+                name="start_sec",
+                dtype=DataType.FLOAT
+            ),
+            FieldSchema(
+                name="end_sec",
+                dtype=DataType.FLOAT
+            ),
+            FieldSchema(
+                name="media_type",
+                dtype=DataType.VARCHAR,
+                max_length=50
             )
         ]
 
