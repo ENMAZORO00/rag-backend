@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from app.ingestion import index_document
 from app.retrieval import retrieve_with_sources
@@ -10,6 +10,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from app.config import MEDIA_STORAGE_DIR
 from app.media_ingestion import process_media_upload
+from app.auth import (
+    authenticate_user,
+    create_access_token,
+    create_user,
+    get_current_user,
+    get_websocket_user,
+)
+
+
+class CredentialsRequest(BaseModel):
+    email: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
 
 class AskRequest(BaseModel):
     query: str
@@ -80,7 +98,10 @@ def _build_sources(chunks):
 
 
 @app.post("/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
     content = await file.read()
     filename = file.filename or "upload.txt"
     extension = filename.lower().split(".")[-1]
@@ -112,7 +133,10 @@ async def upload(file: UploadFile = File(...)):
 
 
 @app.post("/ask")
-async def ask(request: AskRequest):
+async def ask(
+    request: AskRequest,
+    current_user: dict = Depends(get_current_user),
+):
 
     print("Incoming Query:", request.query)
 
@@ -125,8 +149,41 @@ async def ask(request: AskRequest):
     return {"answer": answer, "sources": _build_sources(chunks)}
 
 
+@app.post("/auth/signup", response_model=AuthResponse)
+async def signup(request: CredentialsRequest):
+    user = create_user(request.email, request.password)
+    access_token = create_access_token(user["id"], user["email"])
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user,
+    }
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def login(request: CredentialsRequest):
+    user = authenticate_user(request.email, request.password)
+    access_token = create_access_token(user["id"], user["email"])
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": user,
+    }
+
+
+@app.get("/auth/me")
+async def me(current_user: dict = Depends(get_current_user)):
+    return {"user": current_user}
+
+
 @app.websocket("/ws/ask")
 async def ask_stream(websocket: WebSocket):
+    try:
+        current_user = get_websocket_user(websocket)
+    except HTTPException:
+        await websocket.close(code=1008)
+        return
+
     await websocket.accept()
     try:
         while True:

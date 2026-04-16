@@ -20,4 +20,12 @@ EMBEDDING_DIM = int(os.getenv("EMBEDDING_DIM", 1536))
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "rag_app")
 MONGO_MEDIA_COLLECTION = os.getenv("MONGO_MEDIA_COLLECTION", "media_transcripts")
+MONGO_USERS_COLLECTION = os.getenv("MONGO_USERS_COLLECTION", "users")
 MEDIA_STORAGE_DIR = os.getenv("MEDIA_STORAGE_DIR", "uploaded_media")
+
+# 🔥 Auth
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-env")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
+)

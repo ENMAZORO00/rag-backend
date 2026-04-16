@@ -2,6 +2,7 @@ fastapi
 uvicorn
 pymilvus
 requests
+certifi
 python-dotenv
 pypdf
 python-docx
@@ -12,3 +13,6 @@ tiktoken
 openai
 python-multipart
 pymongo
+python-jose
+bcrypt==3.2.2
+passlib[bcrypt]==1.7.4
